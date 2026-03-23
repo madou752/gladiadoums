@@ -1,0 +1,219 @@
+﻿@page "/"
+@using GladiadoumsWeb.Models
+@using GladiadoumsWeb.Logic
+
+<PageTitle>Gladiadoums</PageTitle>
+
+<h1 class="text-center">GLADIADOUMS ⚔️</h1>
+
+@if (joueur == null || !joueur.EstVivant())
+{
+    <div class="text-center mt-5">
+        @if (joueur != null)
+        {
+            <div class="alert alert-danger">
+                <h3>*** VOUS ÊTES MORT ***</h3>
+                <p>Score final : <strong>@joueur.Score</strong> salles terminées.</p>
+            </div>
+        }
+        <button class="btn btn-primary btn-lg" @onclick="DemarrerJeu">Nouvelle Partie</button>
+    </div>
+}
+else
+{
+    <div class="card mb-3 border-dark">
+        <div class="card-header bg-dark text-white d-flex justify-content-between">
+            <span><strong>SALLE @(joueur.Score + 1)</strong></span>
+            <span>❤️ PV: @joueur.PV</span>
+            <span>⚔️ Dégâts: @joueur.Degats</span>
+            <span>💰 Or: @joueur.Or</span>
+            <span>💨 Esquive: @Math.Round(joueur.ChanceEsquive, 1)%</span>
+            <span>🔥 Combo: @joueur.Combo/3</span>
+        </div>
+    </div>
+
+    <div class="card mb-3 bg-light">
+        <div class="card-body" style="height: 200px; overflow-y: auto;">
+            @foreach(var msg in messagesLog)
+            {
+                <p class="mb-1">@msg</p>
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body text-center">
+            @if (enCombat && ennemi != null && ennemi.EstVivant())
+            {
+                <h4 class="text-danger mb-4">Un @ennemi.Nom vous bloque la route ! (❤️ @ennemi.PV | ⚔️ @ennemi.Degats)</h4>
+                
+                <button class="btn btn-danger mx-2" @onclick="() => JouerTour(ActionCombat.Rapide)">🗡️ Rapide</button>
+                <button class="btn btn-warning mx-2" @onclick="() => JouerTour(ActionCombat.Puissante)">🔨 Puissante</button>
+                <button class="btn btn-info mx-2" @onclick="() => JouerTour(ActionCombat.Garde)">🛡️ Garde</button>
+            }
+            else
+            {
+                <button class="btn btn-success btn-lg" @onclick="Continuer">Avancer à la salle suivante 🚪</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    Joueur joueur;
+    Ennemi ennemi;
+    GestionnaireSalles gestionnaire = new GestionnaireSalles();
+    LogiqueSalles logique = new LogiqueSalles();
+    MoteurCombat moteur = new MoteurCombat();
+    Random random = new Random();
+
+    bool enCombat = false;
+    List<string> messagesLog = new List<string>();
+
+    void DemarrerJeu()
+    {
+        joueur = new Joueur("GladiaDoums", 100, 10);
+        messagesLog.Clear();
+        Log("Bienvenue dans GLADIADOUMS ! Préparez-vous à combattre.");
+        GenererSalle();
+    }
+
+    void Log(string msg)
+    {
+        messagesLog.Add(msg);
+        if(messagesLog.Count > 6) messagesLog.RemoveAt(0);
+    }
+
+    void Continuer()
+    {
+        messagesLog.Clear();
+        GenererSalle();
+    }
+
+    void GenererSalle()
+    {
+        TypeSalle salleActuelle = gestionnaire.DeterminerTypeSalle(joueur.Score);
+
+        if (salleActuelle == TypeSalle.Infirmerie)
+        {
+            Log("Vous entrez dans l'Infirmerie. Vos PV sont restaurés !");
+            logique.AppliquerInfirmerie(joueur);
+            joueur.Score++;
+            enCombat = false;
+        }
+        else if (salleActuelle == TypeSalle.Shop)
+        {
+            Log("Vous entrez dans le Shop. (Dépense 20 Or pour +2 Dégâts)");
+            logique.AppliquerBoutique(joueur);
+            joueur.Score++;
+            enCombat = false;
+        }
+        else if (salleActuelle == TypeSalle.Mystere)
+        {
+            Log("Vous entrez dans une Salle Mystère...");
+            logique.AppliquerSalleMystere(joueur);
+            joueur.Score++;
+            enCombat = false;
+        }
+        else if (salleActuelle == TypeSalle.ReposBoss)
+        {
+            Log("Salle de repos avant le Boss ! Soins complets.");
+            logique.AppliquerInfirmerie(joueur);
+            enCombat = false;
+        }
+        else
+        {
+            bool estBoss = (salleActuelle == TypeSalle.Boss);
+            int pvEnnemi = estBoss ? 150 + (joueur.Score * 10) : 50 + (joueur.Score * 5);
+            int degatsEnnemi = estBoss ? 15 + (joueur.Score * 2) : 5 + (joueur.Score);
+            string nomEnnemi = estBoss ? "BOSS" : "Ennemi Standard";
+
+            ennemi = new Ennemi(nomEnnemi, pvEnnemi, degatsEnnemi);
+            enCombat = true;
+        }
+    }
+
+    void JouerTour(ActionCombat actionJoueur)
+    {
+        ActionCombat actionEnnemi = (ActionCombat)random.Next(0, 3);
+        Log($"L'ennemi a choisi : {actionEnnemi}");
+
+        string resultat = moteur.CalculerIssue(actionJoueur, actionEnnemi);
+        int trueDmgJoueur = moteur.CalculerDegats(joueur.Degats);
+        int trueDmgEnnemi = moteur.CalculerDegats(ennemi.Degats);
+
+        if (resultat == "Gagné")
+        {
+            if (moteur.TentativeMissEnnemi())
+            {
+                Log("L'ennemi esquive votre attaque (Miss) !");
+                joueur.Combo = 0;
+            }
+            else 
+            {
+                if (joueur.Combo >= 3)
+                {
+                    trueDmgJoueur = trueDmgJoueur * 2;
+                    Log("*** COUP CRITIQUE ! ***");
+                    joueur.Combo = 0;
+                }
+                else
+                {
+                    joueur.Combo++;
+                    Log($"Combo ! ({joueur.Combo}/3)");
+                }
+                Log($"Vous gagnez le duel ! Vous infligez {trueDmgJoueur} dégâts.");
+                ennemi.PV -= trueDmgJoueur;
+            }
+        }   
+        else if (resultat == "Perdu")
+        {
+            if (moteur.TentativeEsquiveJoueur(joueur.ChanceEsquive))
+            {
+                Log("Esquive réussie ! Vous évitez l'attaque (0 dégât).");
+                joueur.ChanceEsquive = 5.0;
+            }
+            else
+            {
+                joueur.Combo = 0;
+                Log($"Vous perdez le duel ! L'ennemi inflige {trueDmgEnnemi} dégâts.");
+                joueur.PV -= trueDmgEnnemi;
+                joueur.ChanceEsquive += 1.2;
+            }
+        }
+        else if (resultat == "Egalite_Joueur")
+        {
+            joueur.Combo = 0;
+            int degatsJoueur = (int)Math.Round(trueDmgJoueur * 0.8);
+            int degatsEnnemis = (int)Math.Round(trueDmgEnnemi * 0.2);
+            Log($"Choc ! Vous prenez le dessus. Vous infligez {degatsJoueur} dégâts et subissez {degatsEnnemis}.");
+            ennemi.PV -= degatsJoueur;
+            joueur.PV -= degatsEnnemis;
+        }
+        else if (resultat == "Egalite_Ennemi")
+        {
+            joueur.Combo = 0;
+            int degatsJoueur = (int)Math.Round(trueDmgJoueur * 0.2);
+            int degatsEnnemis = (int)Math.Round(trueDmgEnnemi * 0.8);
+            Log($"Choc ! L'ennemi prend le dessus. Il vous inflige {degatsEnnemis} dégâts, vous lui faites {degatsJoueur}.");
+            joueur.PV -= degatsEnnemis;
+            ennemi.PV -= degatsJoueur;
+        }
+        if (!ennemi.EstVivant() && joueur.EstVivant())
+        {
+            Log($"Vous avez vaincu le {ennemi.Nom} !");
+            joueur.Score++;
+
+            int orGagne = random.Next(5, 16);
+            joueur.Or += orGagne;
+            Log($"Vous trouvez {orGagne} Or.");
+
+            if (random.Next(1, 101) <= 5)
+            {
+                joueur.Degats += 5;
+                Log("LOOT RARE ! Vous ramassez l'arme de l'ennemi (+5 Dégâts) !");
+            }
+            enCombat = false;
+        }
+    }
+}
