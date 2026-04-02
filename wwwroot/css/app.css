@@ -475,7 +475,102 @@ h1, h2, h3, h4, .gladiator-title, .fighter-name, .vs-label,
 }
 
 .log-body {
-    height: 165px;
+    height: 110px;
     overflow-y: auto;
-    font-size: 0.88rem;
+    font-size: 0.8rem;
+}
+
+/* === Clash card (résultat du dernier tour) === */
+.clash-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(0,0,0,0.45);
+    border: 1px solid #3a3a5a;
+    border-radius: 10px;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    animation: clash-in 0.25s ease;
+}
+
+@keyframes clash-in {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.clash-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 72px;
+}
+
+.clash-side-player { color: #6dd5e4; }
+.clash-side-enemy  { color: #ff9090; }
+
+.clash-side-icon { font-size: 1.3rem; }
+
+.clash-side-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    font-family: 'Cinzel', Georgia, serif;
+}
+
+.clash-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 115px;
+}
+
+.clash-badge {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    text-align: center;
+    font-family: 'Cinzel', Georgia, serif;
+}
+
+.clash-win  { background: rgba(86,204,86,0.15);  color: #56cc56; border: 1px solid rgba(86,204,86,0.45); }
+.clash-lose { background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.45); }
+.clash-draw { background: rgba(255,215,0,0.15);   color: #ffd700; border: 1px solid rgba(255,215,0,0.45); }
+.clash-miss { background: rgba(150,150,150,0.1);  color: #aaa;    border: 1px solid rgba(150,150,150,0.35); }
+
+.clash-detail {
+    font-size: 0.72rem;
+    color: #888;
+    letter-spacing: 0.5px;
+}
+
+.clash-sep { font-size: 0.85rem; color: #3a3a5a; }
+
+/* === Floating damage numbers === */
+.fighter-hp-wrap { position: relative; }
+
+.dmg-float {
+    position: absolute;
+    right: 6px;
+    top: 0;
+    font-size: 1.05rem;
+    font-weight: 900;
+    pointer-events: none;
+    animation: float-up 1.4s ease-out forwards;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.85);
+    z-index: 10;
+}
+
+.dmg-float-neg { color: #ff6b6b; }
+.dmg-float-pos { color: #56cc56; }
+
+@keyframes float-up {
+    0%   { opacity: 1; transform: translateY(0); }
+    25%  { opacity: 1; transform: translateY(-10px); }
+    100% { opacity: 0; transform: translateY(-38px); }
 }

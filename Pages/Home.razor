@@ -46,15 +46,23 @@ else
             <div class="col-5">
                 <div class="fighter-card fighter-card-player">
                     <div class="fighter-name"><i class="bi bi-shield-fill me-1"></i>@joueur.Nom</div>
-                    <div class="poke-hp-wrapper mt-2">
-                        <span class="poke-hp-label">HP</span>
-                        <div class="poke-hp-track">
-                            <div class="poke-hp-fill poke-hp-@(ObtenirCouleurPoke(joueur.PV, joueur.PvMax))"
-                                 style="width: @(ObtenirPourcentageVie(joueur.PV, joueur.PvMax))%">
+                    <div class="fighter-hp-wrap">
+                        <div class="poke-hp-wrapper mt-2">
+                            <span class="poke-hp-label">HP</span>
+                            <div class="poke-hp-track">
+                                <div class="poke-hp-fill poke-hp-@(ObtenirCouleurPoke(joueur.PV, joueur.PvMax))"
+                                     style="width: @(ObtenirPourcentageVie(joueur.PV, joueur.PvMax))%">
+                                </div>
                             </div>
                         </div>
+                        <div class="poke-hp-numbers">@Math.Max(0, joueur.PV) / @joueur.PvMax PV</div>
+                        @if (floatDmgJoueur != 0)
+                        {
+                            <div @key="floatDmgJoueurKey" class="dmg-float @(floatDmgJoueur < 0 ? "dmg-float-neg" : "dmg-float-pos")">
+                                @(floatDmgJoueur > 0 ? $"+{floatDmgJoueur}" : floatDmgJoueur.ToString())
+                            </div>
+                        }
                     </div>
-                    <div class="poke-hp-numbers">@Math.Max(0, joueur.PV) / @joueur.PvMax PV</div>
                 </div>
             </div>
             <div class="col-2 text-center">
@@ -66,15 +74,21 @@ else
                         @ennemi.Nom
                         <span class="@ClasseNiveauEnnemi() ms-1" style="font-size:0.6rem;vertical-align:middle;">@NomNiveauEnnemi()</span>
                     </div>
-                    <div class="poke-hp-wrapper mt-2">
-                        <span class="poke-hp-label">HP</span>
-                        <div class="poke-hp-track">
-                            <div class="poke-hp-fill poke-hp-@(ObtenirCouleurPoke(ennemi.PV, ennemi.PvMax))"
-                                 style="width: @(ObtenirPourcentageVie(ennemi.PV, ennemi.PvMax))%">
+                    <div class="fighter-hp-wrap">
+                        <div class="poke-hp-wrapper mt-2">
+                            <span class="poke-hp-label">HP</span>
+                            <div class="poke-hp-track">
+                                <div class="poke-hp-fill poke-hp-@(ObtenirCouleurPoke(ennemi.PV, ennemi.PvMax))"
+                                     style="width: @(ObtenirPourcentageVie(ennemi.PV, ennemi.PvMax))%">
+                                </div>
                             </div>
                         </div>
+                        <div class="poke-hp-numbers">@ennemi.PV / @ennemi.PvMax PV</div>
+                        @if (floatDmgEnnemi != 0)
+                        {
+                            <div @key="floatDmgEnnemiKey" class="dmg-float dmg-float-neg">@floatDmgEnnemi</div>
+                        }
                     </div>
-                    <div class="poke-hp-numbers">@ennemi.PV / @ennemi.PvMax PV</div>
                 </div>
             </div>
         </div>
@@ -108,7 +122,32 @@ else
         <div class="card-body text-center">
             @if (enCombat && ennemi != null && ennemi.EstVivant())
             {
-                <p class="opacity-75 mb-3"><small><i class="bi bi-lightning-fill me-1"></i>L'ennemi inflige environ <strong>@ennemi.Degats</strong> dégâts/tour</small></p>
+                @if (showClash)
+                {
+                    <div class="clash-card mb-3">
+                        <div class="clash-side clash-side-player">
+                            <span class="clash-side-icon">@((MarkupString)clashIconJoueur)</span>
+                            <span class="clash-side-label">@clashActionJoueur</span>
+                        </div>
+                        <div class="clash-sep">⚔</div>
+                        <div class="clash-mid">
+                            <span class="clash-badge @clashBadgeClasse">@clashBadgeTexte</span>
+                            @if (!string.IsNullOrEmpty(clashDetail))
+                            {
+                                <span class="clash-detail">@clashDetail</span>
+                            }
+                        </div>
+                        <div class="clash-sep">⚔</div>
+                        <div class="clash-side clash-side-enemy">
+                            <span class="clash-side-icon">@((MarkupString)clashIconEnnemi)</span>
+                            <span class="clash-side-label">@clashActionEnnemi</span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p class="opacity-75 mb-3"><small><i class="bi bi-lightning-fill me-1"></i>L'ennemi inflige environ <strong>@ennemi.Degats</strong> dégâts/tour</small></p>
+                }
                 <div class="action-cards-row mb-3">
                     <button class="action-card action-rapide" @onclick="() => JouerTour(ActionCombat.Rapide)">
                         <i class="bi bi-lightning-fill action-icon"></i>
@@ -190,6 +229,22 @@ else
     bool bouclierActif = false;
     int combatsGagnes = 0;
 
+    // Clash card
+    bool showClash = false;
+    string clashActionJoueur = "";
+    string clashActionEnnemi = "";
+    string clashIconJoueur   = "";
+    string clashIconEnnemi   = "";
+    string clashBadgeTexte   = "";
+    string clashBadgeClasse  = "";
+    string clashDetail       = "";
+
+    // Floating numbers (négatif = dégâts, positif = soin)
+    int floatDmgJoueur    = 0;
+    int floatDmgJoueurKey = 0;
+    int floatDmgEnnemi    = 0;
+    int floatDmgEnnemiKey = 0;
+
     List<(string Texte, string Classe)> messagesLog = new();
 
     void DemarrerJeu()
@@ -200,6 +255,9 @@ else
         bouclierActif = false;
         enChoixNiveau = false;
         jeuCommence = true;
+        showClash = false;
+        floatDmgJoueur = 0;
+        floatDmgEnnemi = 0;
         messagesLog.Clear();
         Log("Bienvenue dans GLADIADOUMS ! Préparez-vous à combattre.");
         GenererSalle();
@@ -208,7 +266,7 @@ else
     void Log(string msg, string classe = "log-neutral")
     {
         messagesLog.Add((msg, classe));
-        if (messagesLog.Count > 6) messagesLog.RemoveAt(0);
+        if (messagesLog.Count > 4) messagesLog.RemoveAt(0);
     }
 
     void AcheterPotion()
@@ -263,6 +321,22 @@ else
         "log-loot" => "<i class=\"bi bi-stars\"></i>",
         _          => "<i class=\"bi bi-chat-left-text\"></i>",
     });
+
+    string NomAction(ActionCombat a) => a switch
+    {
+        ActionCombat.Rapide    => "RAPIDE",
+        ActionCombat.Puissante => "PUISSANTE",
+        ActionCombat.Garde     => "GARDE",
+        _                      => "?"
+    };
+
+    string IconeActionHtml(ActionCombat a) => a switch
+    {
+        ActionCombat.Rapide    => "<i class=\"bi bi-lightning-fill\"></i>",
+        ActionCombat.Puissante => "<i class=\"bi bi-hammer\"></i>",
+        ActionCombat.Garde     => "<i class=\"bi bi-shield-fill\"></i>",
+        _                      => "?"
+    };
 
     string ClasseEnnemi()   => ennemi?.Nom == "BOSS" ? "boss-title text-danger" : "";
     string PrefixeEnnemi()  => ennemi?.Nom == "BOSS" ? "☠️" : "Un";
@@ -333,6 +407,9 @@ else
 
     void GenererSalle()
     {
+        showClash = false;
+        floatDmgJoueur = 0;
+        floatDmgEnnemi = 0;
         TypeSalle salleActuelle = gestionnaire.DeterminerTypeSalle(joueur.Score);
 
         if (salleActuelle == TypeSalle.Infirmerie)
@@ -379,7 +456,18 @@ else
     void JouerTour(ActionCombat actionJoueur)
     {
         ActionCombat actionEnnemi = (ActionCombat)random.Next(0, 3);
-        Log($"L'ennemi a choisi : {actionEnnemi}");
+
+        // Init clash card
+        clashActionJoueur = NomAction(actionJoueur);
+        clashActionEnnemi = NomAction(actionEnnemi);
+        clashIconJoueur   = IconeActionHtml(actionJoueur);
+        clashIconEnnemi   = IconeActionHtml(actionEnnemi);
+        clashDetail       = "";
+        showClash         = true;
+
+        // Accumulation nette de PV (négatif = dégâts, positif = soin)
+        int netJoueur = 0;
+        int netEnnemi = 0;
 
         string resultat = moteur.CalculerIssue(actionJoueur, actionEnnemi);
         int trueDmgJoueur = moteur.CalculerDegats(joueur.Degats);
@@ -389,92 +477,131 @@ else
         {
             if (moteur.TentativeMissEnnemi())
             {
-                Log("L'ennemi esquive votre attaque (Miss) !");
+                Log("Miss — l'ennemi esquive !");
                 joueur.Combo = 0;
+                clashBadgeTexte  = "MISS";
+                clashBadgeClasse = "clash-miss";
+                clashDetail      = "L'ennemi esquive !";
             }
             else
             {
                 if (joueur.Combo >= 3)
                 {
-                    trueDmgJoueur = trueDmgJoueur * 2;
-                    Log("*** COUP CRITIQUE ! ***", "log-loot");
+                    trueDmgJoueur *= 2;
+                    Log("COUP CRITIQUE !", "log-loot");
                     joueur.Combo = 0;
+                    clashBadgeTexte  = "CRITIQUE !";
+                    clashBadgeClasse = "clash-win";
                 }
                 else
                 {
                     joueur.Combo++;
-                    Log($"Combo ! ({joueur.Combo}/3)", "log-win");
+                    clashBadgeTexte  = "VICTOIRE";
+                    clashBadgeClasse = "clash-win";
                 }
-                Log($"Vous gagnez le duel ! Vous infligez {trueDmgJoueur} dégâts.", "log-win");
+                Log($"-{trueDmgJoueur} PV à l'ennemi.", "log-win");
                 ennemi.PV -= trueDmgJoueur;
+                netEnnemi   = -trueDmgJoueur;
+                clashDetail = $"-{trueDmgJoueur} PV";
             }
         }
         else if (resultat == "Perdu")
         {
             if (moteur.TentativeEsquiveJoueur(joueur.ChanceEsquive))
             {
-                Log("Esquive réussie ! Vous évitez l'attaque (0 dégât).", "log-win");
+                Log("Esquive réussie !", "log-win");
                 joueur.ChanceEsquive = joueur.BaseEsquive;
+                clashBadgeTexte  = "ESQUIVE";
+                clashBadgeClasse = "clash-miss";
+                clashDetail      = "0 dégât";
             }
             else if (bouclierActif)
             {
-                Log("🛡️ Bouclier ! Le coup est absorbé (0 dégât).", "log-win");
-                bouclierActif = false;
+                Log("Bouclier — coup absorbé !", "log-win");
+                bouclierActif    = false;
+                clashBadgeTexte  = "BOUCLIER";
+                clashBadgeClasse = "clash-miss";
+                clashDetail      = "0 dégât";
             }
             else
             {
                 joueur.Combo = 0;
-                Log($"Vous perdez le duel ! L'ennemi inflige {trueDmgEnnemi} dégâts.", "log-dmg");
+                Log($"-{trueDmgEnnemi} PV subis.", "log-dmg");
                 joueur.PV -= trueDmgEnnemi;
                 joueur.ChanceEsquive += 2.0;
+                netJoueur        = -trueDmgEnnemi;
+                clashBadgeTexte  = "DÉFAITE";
+                clashBadgeClasse = "clash-lose";
+                clashDetail      = $"-{trueDmgEnnemi} PV";
             }
         }
         else if (resultat == "Egalite_Joueur")
         {
             joueur.Combo = 0;
-            int degatsJoueur = (int)Math.Round(trueDmgJoueur * 0.8);
-            int degatsEnnemis = (int)Math.Round(trueDmgEnnemi * 0.2);
-            Log($"Choc ! Vous prenez le dessus. Vous infligez {degatsJoueur} dégâts et subissez {degatsEnnemis}.", "log-win");
-            ennemi.PV -= degatsJoueur;
-            joueur.PV -= degatsEnnemis;
+            int dJ = (int)Math.Round(trueDmgJoueur * 0.8);
+            int dE = (int)Math.Round(trueDmgEnnemi * 0.2);
+            Log($"Choc ! +{dJ} dmg, -{dE} PV subis.", "log-win");
+            ennemi.PV -= dJ;
+            joueur.PV -= dE;
+            netEnnemi        = -dJ;
+            netJoueur        = -dE;
+            clashBadgeTexte  = "ÉGALITÉ";
+            clashBadgeClasse = "clash-draw";
+            clashDetail      = $"+{dJ} · -{dE} PV";
         }
         else if (resultat == "Egalite_Ennemi")
         {
             joueur.Combo = 0;
-            int degatsJoueur = (int)Math.Round(trueDmgJoueur * 0.2);
-            int degatsEnnemis = (int)Math.Round(trueDmgEnnemi * 0.5);
+            int dJ = (int)Math.Round(trueDmgJoueur * 0.2);
+            int dE = (int)Math.Round(trueDmgEnnemi * 0.5);
             if (bouclierActif)
             {
-                Log($"Choc ! Bouclier actif — dégâts absorbés ! Vous frappez pour {degatsJoueur}.", "log-win");
+                Log($"Bouclier ! Tu frappes pour {dJ}.", "log-win");
                 bouclierActif = false;
+                clashDetail   = $"Bouclier ! +{dJ} dmg";
             }
             else
             {
-                Log($"Choc ! L'ennemi prend le dessus. Il vous inflige {degatsEnnemis} dégâts, vous lui faites {degatsJoueur}.", "log-dmg");
-                joueur.PV -= degatsEnnemis;
+                Log($"Choc ! -{dE} PV subis.", "log-dmg");
+                joueur.PV -= dE;
+                netJoueur   = -dE;
+                clashDetail = $"-{dE} PV · +{dJ} dmg";
             }
-            ennemi.PV -= degatsJoueur;
+            ennemi.PV -= dJ;
+            netEnnemi        = -dJ;
+            clashBadgeTexte  = "ÉGALITÉ";
+            clashBadgeClasse = "clash-draw";
         }
+
+        // Garde heal
         if (actionJoueur == ActionCombat.Garde && (resultat == "Gagné" || resultat == "Egalite_Joueur"))
         {
             int soin = resultat == "Gagné" ? 8 : 4;
             joueur.PV = Math.Min(joueur.PV + soin, joueur.PvMax);
-            Log($"🛡️ Position défensive ! +{soin} PV.", "log-win");
+            Log($"Garde ! +{soin} PV.", "log-win");
+            netJoueur += soin;
         }
+
+        // Appliquer les floats (clé incrémentée = nouvelle animation CSS)
+        if (netJoueur != 0) { floatDmgJoueur = netJoueur; floatDmgJoueurKey++; }
+        else floatDmgJoueur = 0;
+        if (netEnnemi != 0) { floatDmgEnnemi = netEnnemi; floatDmgEnnemiKey++; }
+        else floatDmgEnnemi = 0;
+
         if (!ennemi.EstVivant() && joueur.EstVivant())
         {
-            Log($"Vous avez vaincu le {ennemi.Nom} !", "log-loot");
+            Log($"Victoire ! {ennemi.Nom} vaincu.", "log-loot");
             joueur.Score++;
             combatsGagnes++;
 
             int orGagne = random.Next(10, 26);
             joueur.Or += orGagne;
-            Log($"Vous trouvez {orGagne} Or.", "log-loot");
+            Log($"+{orGagne} Or.", "log-loot");
 
             if (random.Next(1, 101) <= 5)
             {
                 joueur.Degats += 5;
-                Log("LOOT RARE ! Vous ramassez l'arme de l'ennemi (+5 Dégâts) !", "log-loot");
+                Log("LOOT RARE ! +5 Dégâts !", "log-loot");
             }
             if (random.Next(1, 101) <= 10)
             {
@@ -482,14 +609,15 @@ else
                 if (soinPotion > 0)
                 {
                     joueur.PV += soinPotion;
-                    Log($"🧪 Vous trouvez une potion ! +{soinPotion} PV.", "log-win");
+                    Log($"Potion trouvée ! +{soinPotion} PV.", "log-win");
                 }
             }
-            enCombat = false;
+            enCombat  = false;
+            showClash = false;
             if (combatsGagnes > 0 && combatsGagnes % 5 == 0)
             {
                 enChoixNiveau = true;
-                Log("⬆️ NIVEAU SUPÉRIEUR ! Choisissez votre amélioration.", "log-loot");
+                Log("NIVEAU SUPÉRIEUR ! Choisissez une amélioration.", "log-loot");
             }
         }
     }
