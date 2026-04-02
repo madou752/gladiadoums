@@ -13,7 +13,7 @@ namespace GladiadoumsWeb.Logic
 
         public void AppliquerInfirmerie(Joueur joueur)
         {
-            joueur.PV = 100;
+            joueur.PV = joueur.PvMax;
         }
 
         public void AppliquerSalleMystere(Joueur joueur)
@@ -29,12 +29,31 @@ namespace GladiadoumsWeb.Logic
             }
         }
 
-        public void AppliquerBoutique(Joueur joueur)
+        public void AcheterPotion(Joueur joueur)
+        {
+            if (joueur.Or >= 5)
+            {
+                joueur.Or -= 5;
+                joueur.PV = Math.Min(joueur.PV + 50, joueur.PvMax); 
+            }
+        }
+
+        public void AcheterAiguisage(Joueur joueur)
+        {
+            if (joueur.Or >= 10)
+            {
+                joueur.Or -= 10;
+                joueur.Degats += 2;
+            }
+        }
+
+        public void AcheterEntrainement(Joueur joueur)
         {
             if (joueur.Or >= 20)
             {
                 joueur.Or -= 20;
-                joueur.Degats += 2;
+                joueur.PvMax += 10;
+                joueur.PV += 10;
             }
         }
     }

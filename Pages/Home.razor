@@ -4,56 +4,171 @@
 
 <PageTitle>Gladiadoums</PageTitle>
 
-<h1 class="text-center">GLADIADOUMS ⚔️</h1>
-
-@if (joueur == null || !joueur.EstVivant())
+@if (!jeuCommence)
 {
-    <div class="text-center mt-5">
-        @if (joueur != null)
-        {
-            <div class="alert alert-danger">
-                <h3>*** VOUS ÊTES MORT ***</h3>
-                <p>Score final : <strong>@joueur.Score</strong> salles terminées.</p>
-            </div>
-        }
-        <button class="btn btn-primary btn-lg" @onclick="DemarrerJeu">Nouvelle Partie</button>
+    <div class="title-screen">
+        <div class="title-swords-wrap">
+            <i class="bi bi-hammer title-bg-sword title-bg-sword-l" aria-hidden="true"></i>
+            <i class="bi bi-hammer title-bg-sword title-bg-sword-r" aria-hidden="true"></i>
+            <h1 class="gladiator-title">GLADIADOUMS</h1>
+        </div>
+        <p class="title-subtitle">Entrez dans l'arène. Combattez. Survivez.</p>
+        <button class="btn btn-gold btn-lg px-5 mt-4" @onclick="DemarrerJeu">
+            <i class="bi bi-play-fill me-1"></i>Entrer dans l'Arène
+        </button>
+    </div>
+}
+else if (joueur == null || !joueur.EstVivant())
+{
+    <div class="death-screen">
+        <i class="bi bi-skull death-skull" aria-hidden="true"></i>
+        <h2 class="death-title">VOUS ÊTES TOMBÉ</h2>
+        <p class="death-score">@(joueur?.Score ?? 0) salles franchies</p>
+        <button class="btn btn-gold btn-lg mt-4 px-5" @onclick="DemarrerJeu">
+            <i class="bi bi-arrow-counterclockwise me-1"></i>Revanche
+        </button>
     </div>
 }
 else
 {
-    <div class="card mb-3 border-dark">
-        <div class="card-header bg-dark text-white d-flex justify-content-between">
-            <span><strong>SALLE @(joueur.Score + 1)</strong></span>
-            <span>❤️ PV: @joueur.PV</span>
-            <span>⚔️ Dégâts: @joueur.Degats</span>
-            <span>💰 Or: @joueur.Or</span>
-            <span>💨 Esquive: @Math.Round(joueur.ChanceEsquive, 1)%</span>
-            <span>🔥 Combo: @joueur.Combo/3</span>
-        </div>
+    <div class="stats-bar mb-3">
+        <span class="stats-item"><i class="bi bi-door-open-fill me-1"></i>Salle <strong>@(joueur.Score + 1)</strong></span>
+        <span class="stats-item"><i class="bi bi-star-fill me-1"></i>Niv. <strong>@(combatsGagnes / 5 + 1)</strong></span>
+        <span class="stats-item"><i class="bi bi-lightning-fill me-1"></i><strong>@joueur.Degats</strong> dégâts</span>
+        <span class="stats-item"><i class="bi bi-coin me-1"></i><strong>@joueur.Or</strong> or</span>
+        <span class="stats-item"><i class="bi bi-wind me-1"></i><strong>@Math.Round(joueur.ChanceEsquive, 1)%</strong></span>
+        <span class="stats-item" title="Combo ×2 au 3ème coup"><i class="bi bi-fire me-1"></i>@(joueur.Combo >= 1 ? "●" : "○")@(joueur.Combo >= 2 ? "●" : "○")@(joueur.Combo >= 3 ? "●" : "○")</span>
     </div>
 
-    <div class="card mb-3 bg-light">
-        <div class="card-body" style="height: 200px; overflow-y: auto;">
-            @foreach(var msg in messagesLog)
+    @if (enCombat && ennemi != null && ennemi.EstVivant())
+    {
+        <div class="row g-2 mb-3 align-items-center">
+            <div class="col-5">
+                <div class="fighter-card fighter-card-player">
+                    <div class="fighter-name"><i class="bi bi-shield-fill me-1"></i>@joueur.Nom</div>
+                    <div class="poke-hp-wrapper mt-2">
+                        <span class="poke-hp-label">HP</span>
+                        <div class="poke-hp-track">
+                            <div class="poke-hp-fill poke-hp-@(ObtenirCouleurPoke(joueur.PV, joueur.PvMax))"
+                                 style="width: @(ObtenirPourcentageVie(joueur.PV, joueur.PvMax))%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="poke-hp-numbers">@Math.Max(0, joueur.PV) / @joueur.PvMax PV</div>
+                </div>
+            </div>
+            <div class="col-2 text-center">
+                <div class="vs-label">VS</div>
+            </div>
+            <div class="col-5">
+                <div class="fighter-card fighter-card-enemy @(ennemi.Nom == "BOSS" ? "fighter-card-boss" : "")">
+                    <div class="fighter-name fighter-name-enemy">
+                        @ennemi.Nom
+                        <span class="@ClasseNiveauEnnemi() ms-1" style="font-size:0.6rem;vertical-align:middle;">@NomNiveauEnnemi()</span>
+                    </div>
+                    <div class="poke-hp-wrapper mt-2">
+                        <span class="poke-hp-label">HP</span>
+                        <div class="poke-hp-track">
+                            <div class="poke-hp-fill poke-hp-@(ObtenirCouleurPoke(ennemi.PV, ennemi.PvMax))"
+                                 style="width: @(ObtenirPourcentageVie(ennemi.PV, ennemi.PvMax))%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="poke-hp-numbers">@ennemi.PV / @ennemi.PvMax PV</div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="fighter-card fighter-card-player fighter-card-standalone mb-3">
+            <div class="fighter-name"><i class="bi bi-shield-fill me-1"></i>@joueur.Nom</div>
+            <div class="poke-hp-wrapper mt-2">
+                <span class="poke-hp-label">HP</span>
+                <div class="poke-hp-track">
+                    <div class="poke-hp-fill poke-hp-@(ObtenirCouleurPoke(joueur.PV, joueur.PvMax))"
+                         style="width: @(ObtenirPourcentageVie(joueur.PV, joueur.PvMax))%">
+                    </div>
+                </div>
+            </div>
+            <div class="poke-hp-numbers">@Math.Max(0, joueur.PV) / @joueur.PvMax PV</div>
+        </div>
+    }
+
+    <div class="card mb-3 log-card">
+        <div class="card-body log-body">
+            @foreach (var entry in messagesLog)
             {
-                <p class="mb-1">@msg</p>
+                <p class="mb-1 @entry.Classe"><span class="log-icon me-1">@IconeLog(entry.Classe)</span>@entry.Texte</p>
             }
         </div>
     </div>
 
-    <div class="card">
+    <div class="card combat-section">
         <div class="card-body text-center">
             @if (enCombat && ennemi != null && ennemi.EstVivant())
             {
-                <h4 class="text-danger mb-4">Un @ennemi.Nom vous bloque la route ! (❤️ @ennemi.PV | ⚔️ @ennemi.Degats)</h4>
-                
-                <button class="btn btn-danger mx-2" @onclick="() => JouerTour(ActionCombat.Rapide)">🗡️ Rapide</button>
-                <button class="btn btn-warning mx-2" @onclick="() => JouerTour(ActionCombat.Puissante)">🔨 Puissante</button>
-                <button class="btn btn-info mx-2" @onclick="() => JouerTour(ActionCombat.Garde)">🛡️ Garde</button>
+                <p class="opacity-75 mb-3"><small><i class="bi bi-lightning-fill me-1"></i>L'ennemi inflige environ <strong>@ennemi.Degats</strong> dégâts/tour</small></p>
+                <div class="action-cards-row mb-3">
+                    <button class="action-card action-rapide" @onclick="() => JouerTour(ActionCombat.Rapide)">
+                        <i class="bi bi-lightning-fill action-icon"></i>
+                        <div class="action-name">Rapide</div>
+                        <div class="action-desc">Bat Puissante</div>
+                    </button>
+                    <button class="action-card action-puissante" @onclick="() => JouerTour(ActionCombat.Puissante)">
+                        <i class="bi bi-hammer action-icon"></i>
+                        <div class="action-name">Puissante</div>
+                        <div class="action-desc">Bat Garde</div>
+                    </button>
+                    <button class="action-card action-garde" @onclick="() => JouerTour(ActionCombat.Garde)">
+                        <i class="bi bi-shield-fill action-icon"></i>
+                        <div class="action-name">Garde</div>
+                        <div class="action-desc">Bat Rapide · +PV</div>
+                    </button>
+                </div>
+                @if (bouclierDisponible && !bouclierActif)
+                {
+                    <button class="btn btn-outline-light btn-sm" @onclick="UtiliserBouclier"><i class="bi bi-shield-fill me-1"></i>Bouclier (1x/combat)</button>
+                }
+                else if (bouclierActif)
+                {
+                    <span class="badge bg-info text-dark fs-6"><i class="bi bi-shield-fill me-1"></i>Bouclier actif — prochain coup absorbé</span>
+                }
+            }
+            else if (enChoixNiveau)
+            {
+                <h4 class="text-warning mb-4"><i class="bi bi-arrow-up-circle-fill me-1"></i>MONTÉE EN NIVEAU ! Choisissez une amélioration :</h4>
+                <div class="d-flex justify-content-center flex-wrap gap-3">
+                    <button class="btn btn-success btn-lg" @onclick="UpgradePv">
+                        <i class="bi bi-heart-fill me-1"></i>+20 PV Max<br /><small>Et soigne +20 PV</small>
+                    </button>
+                    <button class="btn btn-danger btn-lg" @onclick="UpgradeDegats">
+                        <i class="bi bi-lightning-fill me-1"></i>+3 Dégâts<br /><small>Frappe plus fort</small>
+                    </button>
+                    <button class="btn btn-info btn-lg" @onclick="UpgradeEsquive">
+                        <i class="bi bi-wind me-1"></i>+5% Esquive<br /><small>Esquive permanente</small>
+                    </button>
+                </div>
+            }
+            else if (enBoutique)
+            {
+                <h4 class="text-warning mb-4"><i class="bi bi-shop me-1"></i>Bienvenue au Shop ! Que voulez-vous acheter ?</h4>
+                <div class="d-flex justify-content-center flex-wrap gap-2 mb-3">
+                    <button class="btn btn-success" disabled="@(joueur.Or < 5)" @onclick="AcheterPotion">
+                        <i class="bi bi-droplet-fill me-1"></i>Potion (5 Or)<br /><small>+50 PV</small>
+                    </button>
+                    <button class="btn btn-danger" disabled="@(joueur.Or < 10)" @onclick="AcheterAiguisage">
+                        <i class="bi bi-hammer me-1"></i>Aiguisage (10 Or)<br /><small>+2 Dégâts</small>
+                    </button>
+                    <button class="btn btn-primary" disabled="@(joueur.Or < 20)" @onclick="AcheterEntrainement">
+                        <i class="bi bi-activity me-1"></i>Entraînement (20 Or)<br /><small>+10 PV Max</small>
+                    </button>
+                </div>
+                <button class="btn btn-secondary mt-2" @onclick="Continuer"><i class="bi bi-door-open me-1"></i>Quitter la boutique</button>
             }
             else
             {
-                <button class="btn btn-success btn-lg" @onclick="Continuer">Avancer à la salle suivante 🚪</button>
+                <button class="btn btn-gold btn-lg" @onclick="Continuer"><i class="bi bi-arrow-right-circle-fill me-1"></i>Salle suivante</button>
             }
         </div>
     </div>
@@ -68,24 +183,150 @@ else
     Random random = new Random();
 
     bool enCombat = false;
-    List<string> messagesLog = new List<string>();
+    bool enBoutique = false;
+    bool enChoixNiveau = false;
+    bool jeuCommence = false;
+    bool bouclierDisponible = true;
+    bool bouclierActif = false;
+    int combatsGagnes = 0;
+
+    List<(string Texte, string Classe)> messagesLog = new();
 
     void DemarrerJeu()
     {
-        joueur = new Joueur("GladiaDoums", 100, 10);
+        joueur = new Joueur("GladiaDoums", 150, 15);
+        combatsGagnes = 0;
+        bouclierDisponible = true;
+        bouclierActif = false;
+        enChoixNiveau = false;
+        jeuCommence = true;
         messagesLog.Clear();
         Log("Bienvenue dans GLADIADOUMS ! Préparez-vous à combattre.");
         GenererSalle();
     }
 
-    void Log(string msg)
+    void Log(string msg, string classe = "log-neutral")
     {
-        messagesLog.Add(msg);
-        if(messagesLog.Count > 6) messagesLog.RemoveAt(0);
+        messagesLog.Add((msg, classe));
+        if (messagesLog.Count > 6) messagesLog.RemoveAt(0);
+    }
+
+    void AcheterPotion()
+    {
+        logique.AcheterPotion(joueur);
+        Log("Vous avez acheté une Potion et récupéré des PV !", "log-win");
+    }
+
+    void AcheterAiguisage()
+    {
+        logique.AcheterAiguisage(joueur);
+        Log("Vous avez aiguisé votre arme (+2 Dégâts) !", "log-win");
+    }
+
+    void AcheterEntrainement()
+    {
+        logique.AcheterEntrainement(joueur);
+        Log("Vous vous êtes entraîné (+10 PV Max) !", "log-win");
+    }
+
+    int ObtenirPourcentageVie(int pv, int pvMax)
+    {
+        if (pvMax == 0) return 0;
+        int pourcentage = (int)((double)pv / pvMax * 100);
+        return Math.Clamp(pourcentage, 0, 100); 
+    }
+
+    string ObtenirCouleurVie(int pv, int pvMax)
+    {
+        int pourcentage = ObtenirPourcentageVie(pv, pvMax);
+        
+        if (pourcentage > 50) 
+            return "bg-success";
+        else if (pourcentage > 20) 
+            return "bg-warning text-dark";
+        else 
+            return "bg-danger";
+    }
+
+    string ObtenirCouleurPoke(int pv, int pvMax)
+    {
+        int pourcentage = ObtenirPourcentageVie(pv, pvMax);
+        if (pourcentage > 50) return "green";
+        else if (pourcentage > 25) return "yellow";
+        else return "red";
+    }
+
+    MarkupString IconeLog(string classe) => (MarkupString)(classe switch
+    {
+        "log-win"  => "<i class=\"bi bi-check-circle-fill\"></i>",
+        "log-dmg"  => "<i class=\"bi bi-heartbreak-fill\"></i>",
+        "log-loot" => "<i class=\"bi bi-stars\"></i>",
+        _          => "<i class=\"bi bi-chat-left-text\"></i>",
+    });
+
+    string ClasseEnnemi()   => ennemi?.Nom == "BOSS" ? "boss-title text-danger" : "";
+    string PrefixeEnnemi()  => ennemi?.Nom == "BOSS" ? "☠️" : "Un";
+    string SuffixeEnnemi()  => ennemi?.Nom == "BOSS" ? "se dresse devant vous !" : "vous bloque la route !";
+
+    string NomNiveauEnnemi()
+    {
+        if (ennemi?.Nom == "BOSS") return "BOSS";
+        if (joueur.Score >= 11) return "Élite+";
+        if (joueur.Score >= 7)  return "Élite";
+        if (joueur.Score >= 3)  return "Normal";
+        return "Facile";
+    }
+
+    string ClasseNiveauEnnemi()
+    {
+        return NomNiveauEnnemi() switch
+        {
+            "Facile" => "badge bg-success",
+            "Normal" => "badge bg-info text-dark",
+            "Élite"  => "badge bg-warning text-dark",
+            _        => "badge bg-danger",
+        };
+    }
+
+    void UtiliserBouclier()
+    {
+        if (bouclierDisponible && !bouclierActif)
+        {
+            bouclierActif = true;
+            bouclierDisponible = false;
+            Log("🛡️ Bouclier activé ! Le prochain coup sera absorbé.", "log-win");
+        }
+    }
+
+    void UpgradePv()      => ChoisirUpgrade("pv");
+    void UpgradeDegats()  => ChoisirUpgrade("degats");
+    void UpgradeEsquive() => ChoisirUpgrade("esquive");
+
+    void ChoisirUpgrade(string type)
+    {
+        enChoixNiveau = false;
+        if (type == "pv")
+        {
+            joueur.PvMax += 20;
+            joueur.PV = Math.Min(joueur.PV + 20, joueur.PvMax);
+            Log("⬆️ Niveau supérieur ! +20 PV Max.", "log-loot");
+        }
+        else if (type == "degats")
+        {
+            joueur.Degats += 3;
+            Log("⬆️ Niveau supérieur ! +3 Dégâts.", "log-loot");
+        }
+        else if (type == "esquive")
+        {
+            joueur.BaseEsquive += 5.0;
+            joueur.ChanceEsquive += 5.0;
+            Log("⬆️ Niveau supérieur ! +5% Esquive.", "log-loot");
+        }
     }
 
     void Continuer()
     {
+        enBoutique = false;
         messagesLog.Clear();
         GenererSalle();
     }
@@ -96,17 +337,17 @@ else
 
         if (salleActuelle == TypeSalle.Infirmerie)
         {
-            Log("Vous entrez dans l'Infirmerie. Vos PV sont restaurés !");
+            Log("Vous entrez dans l'Infirmerie. Vos PV sont restaurés !", "log-win");
             logique.AppliquerInfirmerie(joueur);
             joueur.Score++;
             enCombat = false;
         }
         else if (salleActuelle == TypeSalle.Shop)
         {
-            Log("Vous entrez dans le Shop. (Dépense 20 Or pour +2 Dégâts)");
-            logique.AppliquerBoutique(joueur);
+            Log("🛒 Vous entrez dans le Shop. Faites vos achats !");
             joueur.Score++;
             enCombat = false;
+            enBoutique = true;
         }
         else if (salleActuelle == TypeSalle.Mystere)
         {
@@ -117,19 +358,21 @@ else
         }
         else if (salleActuelle == TypeSalle.ReposBoss)
         {
-            Log("Salle de repos avant le Boss ! Soins complets.");
+            Log("Salle de repos avant le Boss ! Soins complets.", "log-win");
             logique.AppliquerInfirmerie(joueur);
             enCombat = false;
         }
         else
         {
             bool estBoss = (salleActuelle == TypeSalle.Boss);
-            int pvEnnemi = estBoss ? 150 + (joueur.Score * 10) : 50 + (joueur.Score * 5);
-            int degatsEnnemi = estBoss ? 15 + (joueur.Score * 2) : 5 + (joueur.Score);
+            int pvEnnemi = estBoss ? 80 + (joueur.Score * 6) : 30 + (joueur.Score * 3);
+            int degatsEnnemi = estBoss ? 10 + joueur.Score : 4 + (int)(joueur.Score * 0.5);
             string nomEnnemi = estBoss ? "BOSS" : "Ennemi Standard";
 
             ennemi = new Ennemi(nomEnnemi, pvEnnemi, degatsEnnemi);
             enCombat = true;
+            bouclierDisponible = true;
+            bouclierActif = false;
         }
     }
 
@@ -149,36 +392,41 @@ else
                 Log("L'ennemi esquive votre attaque (Miss) !");
                 joueur.Combo = 0;
             }
-            else 
+            else
             {
                 if (joueur.Combo >= 3)
                 {
                     trueDmgJoueur = trueDmgJoueur * 2;
-                    Log("*** COUP CRITIQUE ! ***");
+                    Log("*** COUP CRITIQUE ! ***", "log-loot");
                     joueur.Combo = 0;
                 }
                 else
                 {
                     joueur.Combo++;
-                    Log($"Combo ! ({joueur.Combo}/3)");
+                    Log($"Combo ! ({joueur.Combo}/3)", "log-win");
                 }
-                Log($"Vous gagnez le duel ! Vous infligez {trueDmgJoueur} dégâts.");
+                Log($"Vous gagnez le duel ! Vous infligez {trueDmgJoueur} dégâts.", "log-win");
                 ennemi.PV -= trueDmgJoueur;
             }
-        }   
+        }
         else if (resultat == "Perdu")
         {
             if (moteur.TentativeEsquiveJoueur(joueur.ChanceEsquive))
             {
-                Log("Esquive réussie ! Vous évitez l'attaque (0 dégât).");
-                joueur.ChanceEsquive = 5.0;
+                Log("Esquive réussie ! Vous évitez l'attaque (0 dégât).", "log-win");
+                joueur.ChanceEsquive = joueur.BaseEsquive;
+            }
+            else if (bouclierActif)
+            {
+                Log("🛡️ Bouclier ! Le coup est absorbé (0 dégât).", "log-win");
+                bouclierActif = false;
             }
             else
             {
                 joueur.Combo = 0;
-                Log($"Vous perdez le duel ! L'ennemi inflige {trueDmgEnnemi} dégâts.");
+                Log($"Vous perdez le duel ! L'ennemi inflige {trueDmgEnnemi} dégâts.", "log-dmg");
                 joueur.PV -= trueDmgEnnemi;
-                joueur.ChanceEsquive += 1.2;
+                joueur.ChanceEsquive += 2.0;
             }
         }
         else if (resultat == "Egalite_Joueur")
@@ -186,7 +434,7 @@ else
             joueur.Combo = 0;
             int degatsJoueur = (int)Math.Round(trueDmgJoueur * 0.8);
             int degatsEnnemis = (int)Math.Round(trueDmgEnnemi * 0.2);
-            Log($"Choc ! Vous prenez le dessus. Vous infligez {degatsJoueur} dégâts et subissez {degatsEnnemis}.");
+            Log($"Choc ! Vous prenez le dessus. Vous infligez {degatsJoueur} dégâts et subissez {degatsEnnemis}.", "log-win");
             ennemi.PV -= degatsJoueur;
             joueur.PV -= degatsEnnemis;
         }
@@ -194,26 +442,55 @@ else
         {
             joueur.Combo = 0;
             int degatsJoueur = (int)Math.Round(trueDmgJoueur * 0.2);
-            int degatsEnnemis = (int)Math.Round(trueDmgEnnemi * 0.8);
-            Log($"Choc ! L'ennemi prend le dessus. Il vous inflige {degatsEnnemis} dégâts, vous lui faites {degatsJoueur}.");
-            joueur.PV -= degatsEnnemis;
+            int degatsEnnemis = (int)Math.Round(trueDmgEnnemi * 0.5);
+            if (bouclierActif)
+            {
+                Log($"Choc ! Bouclier actif — dégâts absorbés ! Vous frappez pour {degatsJoueur}.", "log-win");
+                bouclierActif = false;
+            }
+            else
+            {
+                Log($"Choc ! L'ennemi prend le dessus. Il vous inflige {degatsEnnemis} dégâts, vous lui faites {degatsJoueur}.", "log-dmg");
+                joueur.PV -= degatsEnnemis;
+            }
             ennemi.PV -= degatsJoueur;
+        }
+        if (actionJoueur == ActionCombat.Garde && (resultat == "Gagné" || resultat == "Egalite_Joueur"))
+        {
+            int soin = resultat == "Gagné" ? 8 : 4;
+            joueur.PV = Math.Min(joueur.PV + soin, joueur.PvMax);
+            Log($"🛡️ Position défensive ! +{soin} PV.", "log-win");
         }
         if (!ennemi.EstVivant() && joueur.EstVivant())
         {
-            Log($"Vous avez vaincu le {ennemi.Nom} !");
+            Log($"Vous avez vaincu le {ennemi.Nom} !", "log-loot");
             joueur.Score++;
+            combatsGagnes++;
 
-            int orGagne = random.Next(5, 16);
+            int orGagne = random.Next(10, 26);
             joueur.Or += orGagne;
-            Log($"Vous trouvez {orGagne} Or.");
+            Log($"Vous trouvez {orGagne} Or.", "log-loot");
 
             if (random.Next(1, 101) <= 5)
             {
                 joueur.Degats += 5;
-                Log("LOOT RARE ! Vous ramassez l'arme de l'ennemi (+5 Dégâts) !");
+                Log("LOOT RARE ! Vous ramassez l'arme de l'ennemi (+5 Dégâts) !", "log-loot");
+            }
+            if (random.Next(1, 101) <= 10)
+            {
+                int soinPotion = Math.Min(50, joueur.PvMax - joueur.PV);
+                if (soinPotion > 0)
+                {
+                    joueur.PV += soinPotion;
+                    Log($"🧪 Vous trouvez une potion ! +{soinPotion} PV.", "log-win");
+                }
             }
             enCombat = false;
+            if (combatsGagnes > 0 && combatsGagnes % 5 == 0)
+            {
+                enChoixNiveau = true;
+                Log("⬆️ NIVEAU SUPÉRIEUR ! Choisissez votre amélioration.", "log-loot");
+            }
         }
     }
 }

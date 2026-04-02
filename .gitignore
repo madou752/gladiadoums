@@ -1,0 +1,13 @@
+## .NET / Blazor
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+## Logs
+*.log
+
+## OS
+.DS_Store
+Thumbs.db

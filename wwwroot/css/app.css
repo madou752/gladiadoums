@@ -113,3 +113,369 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* === Barre de PV style Pokémon === */
+.poke-hp-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.poke-hp-label {
+    font-weight: bold;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    color: inherit;
+    min-width: 18px;
+    font-family: 'Courier New', monospace;
+}
+
+.poke-hp-track {
+    flex: 1;
+    height: 10px;
+    background-color: #555;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 2px solid #222;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.poke-hp-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.poke-hp-green {
+    background: linear-gradient(to bottom, #78C850, #3A9D0A);
+}
+
+.poke-hp-yellow {
+    background: linear-gradient(to bottom, #F8D030, #C89000);
+}
+
+.poke-hp-red {
+    background: linear-gradient(to bottom, #F85888, #B02020);
+    animation: poke-danger-pulse 1s ease-in-out infinite;
+}
+
+@keyframes poke-danger-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.6; }
+}
+
+.poke-hp-count {
+    font-size: 0.75rem;
+    font-family: 'Courier New', monospace;
+    color: inherit;
+    min-width: 60px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.poke-hp-numbers {
+    font-size: 0.75rem;
+    font-family: 'Courier New', monospace;
+    color: inherit;
+    text-align: right;
+    padding-top: 2px;
+}
+
+/* === Dark Arena Theme === */
+body {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+}
+
+.gladiator-title {
+    font-size: 2.8rem;
+    font-weight: 900;
+    letter-spacing: 5px;
+    background: linear-gradient(to bottom, #ffd700, #b8860b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: 'Georgia', serif;
+    margin: 12px 0;
+}
+
+/* === Log messages colorés === */
+.log-win     { color: #56cc56; font-weight: 500; }
+.log-dmg     { color: #ff6b6b; font-weight: 500; }
+.log-loot    { color: #ffd700; font-weight: 600; }
+.log-neutral { color: #888; }
+
+/* === Log card === */
+.log-card {
+    background-color: #111827;
+    border: 1px solid #374151;
+}
+
+/* === Combat section === */
+.combat-section {
+    background-color: #1e1e2e;
+    border: 2px solid #555;
+    color: #e0e0e0;
+}
+
+.boss-title {
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: boss-glow 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes boss-glow {
+    from { text-shadow: 0 0 5px  rgba(255, 50, 50, 0.5); }
+    to   { text-shadow: 0 0 22px rgba(255, 50, 50, 1.0); }
+}
+
+/* === Cinzel font pour les titres du jeu === */
+h1, h2, h3, h4, .gladiator-title, .fighter-name, .vs-label,
+.stats-bar, .action-name, .death-title, .title-subtitle, .btn-gold {
+    font-family: 'Cinzel', Georgia, serif;
+}
+
+/* === Écran titre === */
+.title-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 72vh;
+    text-align: center;
+    padding: 2rem;
+}
+
+.title-swords-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+}
+
+.title-bg-sword {
+    font-size: 7rem;
+    color: rgba(255, 215, 0, 0.2);
+    position: absolute;
+    animation: sword-pulse 2.5s ease-in-out infinite alternate;
+}
+
+.title-bg-sword-l { transform: rotate(-40deg) translateX(-55px); }
+.title-bg-sword-r { transform: rotate( 40deg) translateX( 55px); }
+
+@keyframes sword-pulse {
+    from { filter: drop-shadow(0 0 6px  rgba(255,215,0,0.2)); }
+    to   { filter: drop-shadow(0 0 22px rgba(255,215,0,0.6)); }
+}
+
+.title-subtitle {
+    color: #aaa;
+    font-size: 1.05rem;
+    letter-spacing: 2px;
+    margin-top: 0.4rem;
+}
+
+/* === Écran mort === */
+.death-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 72vh;
+    background: radial-gradient(ellipse at center, rgba(120,0,0,0.45) 0%, transparent 70%);
+    text-align: center;
+    padding: 2rem;
+}
+
+.death-skull {
+    font-size: 5rem;
+    color: #cc2222;
+    animation: skull-shake 0.6s ease-in-out 2;
+    display: block;
+    filter: drop-shadow(0 0 14px rgba(200,0,0,0.7));
+}
+
+@keyframes skull-shake {
+    0%, 100% { transform: rotate(0deg); }
+    25%       { transform: rotate(-12deg); }
+    75%       { transform: rotate(12deg); }
+}
+
+.death-title {
+    color: #cc2222;
+    font-size: 2.4rem;
+    letter-spacing: 4px;
+    text-shadow: 0 0 22px rgba(200,0,0,0.8);
+    margin-top: 1rem;
+}
+
+.death-score {
+    color: #aaa;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    margin-top: 0.5rem;
+}
+
+/* === Bouton or === */
+.btn-gold {
+    background: linear-gradient(to bottom, #ffd700, #b8860b);
+    border: 2px solid #b8860b;
+    color: #1a1a1a;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    transition: all 0.2s;
+}
+
+.btn-gold:hover {
+    background: linear-gradient(to bottom, #ffe55a, #d4a017);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.55);
+    color: #1a1a1a;
+}
+
+/* === Stats bar === */
+.stats-bar {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #3a3a4a;
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: #ddd;
+}
+
+.stats-item {
+    font-size: 0.82rem;
+    letter-spacing: 0.5px;
+}
+
+/* === Cartes combattants (layout VS) === */
+.fighter-card {
+    background: rgba(0,0,0,0.45);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 12px;
+    color: #e0e0e0;
+}
+
+.fighter-card-player {
+    border-color: #2a6496;
+    box-shadow: 0 0 10px rgba(42,100,150,0.35);
+}
+
+.fighter-card-enemy {
+    border-color: #7a2025;
+    box-shadow: 0 0 10px rgba(122,32,37,0.35);
+}
+
+.fighter-card-boss {
+    border-color: #cc0000 !important;
+    animation: boss-card-glow 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes boss-card-glow {
+    from { box-shadow: 0 0 10px rgba(200,0,0,0.3); }
+    to   { box-shadow: 0 0 28px rgba(200,0,0,0.85); }
+}
+
+.fighter-card-standalone {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.fighter-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.fighter-name-enemy {
+    color: #ff9090;
+}
+
+/* === Label VS === */
+.vs-label {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: #ffd700;
+    text-shadow: 0 0 14px rgba(255,215,0,0.75);
+    letter-spacing: 4px;
+}
+
+/* === Cartes d'action === */
+.action-cards-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.action-card {
+    background: rgba(255,255,255,0.05);
+    border: 2px solid #555;
+    border-radius: 10px;
+    padding: 14px 20px;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    min-width: 105px;
+    text-align: center;
+    color: #e0e0e0;
+    /* reset button styles */
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255,215,0,0.07);
+    border-color: #ffd700;
+    box-shadow: 0 5px 18px rgba(255,215,0,0.25);
+}
+
+.action-card:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.action-rapide             { border-color: #c0392b; }
+.action-rapide:hover       { border-color: #ff6b79; box-shadow: 0 5px 16px rgba(220,53,69,0.45); background: rgba(220,53,69,0.08); }
+
+.action-puissante          { border-color: #d68910; }
+.action-puissante:hover    { border-color: #ffe066; box-shadow: 0 5px 16px rgba(255,193,7,0.45);  background: rgba(255,193,7,0.08); }
+
+.action-garde              { border-color: #117a8b; }
+.action-garde:hover        { border-color: #6dd5e4; box-shadow: 0 5px 16px rgba(23,162,184,0.45); background: rgba(23,162,184,0.08); }
+
+.action-icon {
+    font-size: 1.9rem;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.action-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+
+.action-desc {
+    font-size: 0.68rem;
+    color: #888;
+    margin-top: 3px;
+    font-family: 'Helvetica Neue', sans-serif;
+}
+
+/* === Icônes log === */
+.log-icon {
+    display: inline-block;
+    width: 1.3em;
+    text-align: center;
+}
+
+.log-body {
+    height: 165px;
+    overflow-y: auto;
+    font-size: 0.88rem;
+}

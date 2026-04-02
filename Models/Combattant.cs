@@ -11,12 +11,14 @@ namespace GladiadoumsWeb.Models
         public string Nom;
         public int PV;
         public int Degats;
+        public int PvMax;
 
         public Combattant(string nom, int pv, int degats)
         {
             Nom = nom;
             PV = pv;
             Degats = degats;
+            PvMax = pv;
         }
 
         public bool EstVivant()
